@@ -1,0 +1,29 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: license-server
+
+# RocketMQ 配置
+rocketmq:
+  name-server: localhost:9876
+  producer:
+    group: license-server-producer-group
+    send-message-timeout: 30000
+    retry-times-when-send-failed: 3
+    retry-times-when-send-async-failed: 3
+
+# 许可系统配置
+license:
+  message:
+    timeout: 30000
+  server:
+    consumer:
+      group: license-server-response-group
+
+# 日志配置
+logging:
+  level:
+    com.license.server: INFO
+    org.apache.rocketmq: WARN
