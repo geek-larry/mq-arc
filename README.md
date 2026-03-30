@@ -3,62 +3,62 @@
 ## 系统架构图
 
 ```mermaid
-flowchart TD
+graph TD
+    %% 前端
+    A[Web界面] -->|HTTP请求| B[REST API Controllers]
+    B -->|HTTP响应| A
+    
+    %% 服务端
+    B -->|调用| C[License Server]
+    C -->|返回结果| B
+    C -->|发布消息| D[Message Publish Service]
+    E[Response Listener] -->|处理响应| C
+    
+    %% 消息队列
+    D -->|发送| F[RocketMQ]
+    F -->|订阅| E
+    
+    %% 客户端
+    F -->|订阅| G[Message Listener]
+    G -->|分发| H[Handler Chain]
+    H -->|生成响应| I[Response Send Service]
+    I -->|发送响应| F
+    
+    %% 许可服务器
+    H -->|处理| J[Flexnet Server]
+    H -->|处理| K[Sentinel Server]
+    H -->|处理| L[LMX Server]
+    J -->|返回| H
+    K -->|返回| H
+    L -->|返回| H
+    
+    %% 模块分组
     subgraph Frontend[前端应用]
-        A[Web界面]
+        A
     end
-
+    
     subgraph Server[服务端]
-        B[License Server]
-        C[Message Publish Service]
-        D[Response Listener]
-        E[REST API Controllers]
+        B
+        C
+        D
+        E
     end
-
+    
     subgraph MessageQueue[消息队列]
-        F[RocketMQ]
+        F
     end
-
+    
     subgraph Client[客户端]
-        G[License Client]
-        H[Message Listener]
-        I[Handler Chain]
-        J[Response Send Service]
+        G
+        H
+        I
     end
-
+    
     subgraph LicenseServers[许可服务器]
-        K[Flexnet Server]
-        L[Sentinel Server]
-        M[LMX Server]
+        J
+        K
+        L
     end
-
-    A -->|HTTP请求| E
-    E -->|调用| B
-    B -->|发布消息| C
-    C -->|发送| F
-    F -->|订阅| H
-    H -->|分发| I
-    I -->|处理| K
-    I -->|处理| L
-    I -->|处理| M
-    I -->|生成响应| J
-    J -->|发送响应| F
-    F -->|订阅| D
-    D -->|处理响应| B
-    B -->|返回结果| E
-    E -->|HTTP响应| A
-
-    classDef frontend fill:#f9f,stroke:#333,stroke-width:2px
-    classDef server fill:#bbf,stroke:#333,stroke-width:2px
-    classDef mq fill:#bfb,stroke:#333,stroke-width:2px
-    classDef client fill:#fbb,stroke:#333,stroke-width:2px
-    classDef license fill:#ffb,stroke:#333,stroke-width:2px
-
-    class A frontend
-    class B,C,D,E server
-    class F mq
-    class G,H,I,J client
-    class K,L,M license
 ```
 
 ## 系统模块说明
