@@ -4,7 +4,7 @@ import com.license.client.handler.AbstractMessageHandler;
 import com.license.common.enums.OperationType;
 import com.license.common.enums.SoftwareType;
 import com.license.common.message.LicenseMessage;
-import com.license.common.payload.UserKickoutPayload;
+import com.license.common.payload.kickout.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-public class UserKickoutHandler extends AbstractMessageHandler<UserKickoutPayload, Void> {
+public class UserKickoutHandler extends AbstractMessageHandler<Object, Void> {
 
     @Autowired
     private String clientHostname;
@@ -40,40 +40,107 @@ public class UserKickoutHandler extends AbstractMessageHandler<UserKickoutPayloa
     }
 
     @Override
-    protected Void doHandle(LicenseMessage<UserKickoutPayload> message) throws Exception {
-        UserKickoutPayload payload = message.getPayload();
+    protected Void doHandle(LicenseMessage<Object> message) throws Exception {
+        Object payloadObj = message.getPayload();
         SoftwareType softwareType = message.getSoftwareType();
         
-        log.info("Kicking out user [{}] from {} license, feature: {}, reason: {}",
-                payload.getUsername(), softwareType, payload.getFeatureCode(), payload.getReason());
-        
-        // 模拟处理延迟
-        simulateDelay(100, 500);
-        
-        // 模拟调用实际的许可服务器接口
-        boolean success = simulateKickoutUser(softwareType, payload);
-        
-        if (!success) {
-            throw new RuntimeException("Failed to kickout user: " + payload.getUsername());
+        // 根据软件类型处理不同的Payload
+        switch (softwareType) {
+            case FLEXNET:
+                handleFlexnetKickout((FlexnetUserKickoutPayload) payloadObj);
+                break;
+            case SENTINEL:
+                handleSentinelKickout((SentinelUserKickoutPayload) payloadObj);
+                break;
+            case LMX:
+                handleLmxKickout((LmxUserKickoutPayload) payloadObj);
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported software type: " + softwareType);
         }
         
-        log.info("User [{}] kicked out successfully from {}", payload.getUsername(), softwareType);
         return null;
     }
 
-    /**
-     * 模拟调用许可服务器的踢出用户接口
-     */
-    private boolean simulateKickoutUser(SoftwareType softwareType, UserKickoutPayload payload) {
-        // 模拟90%成功率
+    private void handleFlexnetKickout(FlexnetUserKickoutPayload payload) throws Exception {
+        log.info("Kicking out Flexnet user [{}] feature: {}, reason: {}",
+                payload.getUsername(), payload.getFeatureName(), payload.getReason());
+        
+        simulateDelay(100, 500);
+        
+        boolean success = simulateFlexnetKickout(payload);
+        
+        if (!success) {
+            throw new RuntimeException("Failed to kickout Flexnet user: " + payload.getUsername());
+        }
+        
+        log.info("Flexnet user [{}] kicked out successfully", payload.getUsername());
+    }
+
+    private void handleSentinelKickout(SentinelUserKickoutPayload payload) throws Exception {
+        log.info("Kicking out Sentinel user [{}] feature: {}, reason: {}",
+                payload.getUsername(), payload.getFeatureName(), payload.getReason());
+        
+        simulateDelay(100, 500);
+        
+        boolean success = simulateSentinelKickout(payload);
+        
+        if (!success) {
+            throw new RuntimeException("Failed to kickout Sentinel user: " + payload.getUsername());
+        }
+        
+        log.info("Sentinel user [{}] kicked out successfully", payload.getUsername());
+    }
+
+    private void handleLmxKickout(LmxUserKickoutPayload payload) throws Exception {
+        log.info("Kicking out LMX user [{}] product: {}, reason: {}",
+                payload.getUsername(), payload.getProductName(), payload.getReason());
+        
+        simulateDelay(100, 500);
+        
+        boolean success = simulateLmxKickout(payload);
+        
+        if (!success) {
+            throw new RuntimeException("Failed to kickout LMX user: " + payload.getUsername());
+        }
+        
+        log.info("LMX user [{}] kicked out successfully", payload.getUsername());
+    }
+
+    private boolean simulateFlexnetKickout(FlexnetUserKickoutPayload payload) {
         boolean success = simulateRandomSuccess(0.9);
         
         if (success) {
-            log.debug("License server {}: User {} kicked out, session: {}",
-                    softwareType, payload.getUsername(), payload.getSessionId());
+            log.debug("Flexnet server: User {} kicked out, hostId: {}, feature: {}",
+                    payload.getUsername(), payload.getHostId(), payload.getFeatureName());
         } else {
-            log.warn("License server {}: Failed to kickout user {}",
-                    softwareType, payload.getUsername());
+            log.warn("Flexnet server: Failed to kickout user {}", payload.getUsername());
+        }
+        
+        return success;
+    }
+
+    private boolean simulateSentinelKickout(SentinelUserKickoutPayload payload) {
+        boolean success = simulateRandomSuccess(0.9);
+        
+        if (success) {
+            log.debug("Sentinel server: User {} kicked out, sessionId: {}, feature: {}",
+                    payload.getUsername(), payload.getSessionId(), payload.getFeatureName());
+        } else {
+            log.warn("Sentinel server: Failed to kickout user {}", payload.getUsername());
+        }
+        
+        return success;
+    }
+
+    private boolean simulateLmxKickout(LmxUserKickoutPayload payload) {
+        boolean success = simulateRandomSuccess(0.9);
+        
+        if (success) {
+            log.debug("LMX server: User {} kicked out, computerName: {}, product: {}",
+                    payload.getUsername(), payload.getComputerName(), payload.getProductName());
+        } else {
+            log.warn("LMX server: Failed to kickout user {}", payload.getUsername());
         }
         
         return success;

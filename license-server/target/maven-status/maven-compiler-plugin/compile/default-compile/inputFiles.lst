@@ -1,6 +1,10 @@
 D:\.code\Java\mq-arc\license-server\src\main\java\com\license\server\config\RocketMQConfig.java
+D:\.code\Java\mq-arc\license-server\src\main\java\com\license\server\config\RocketMQConsumerConfig.java
+D:\.code\Java\mq-arc\license-server\src\main\java\com\license\server\config\RocketMQProducerConfig.java
+D:\.code\Java\mq-arc\license-server\src\main\java\com\license\server\config\RocketMQStarter.java
 D:\.code\Java\mq-arc\license-server\src\main\java\com\license\server\controller\LicenseMgmtController.java
 D:\.code\Java\mq-arc\license-server\src\main\java\com\license\server\LicenseServerApplication.java
 D:\.code\Java\mq-arc\license-server\src\main\java\com\license\server\listener\ResponseMessageListener.java
 D:\.code\Java\mq-arc\license-server\src\main\java\com\license\server\service\LicenseMgmtService.java
 D:\.code\Java\mq-arc\license-server\src\main\java\com\license\server\service\MessagePublishService.java
+D:\.code\Java\mq-arc\license-server\src\main\java\com\license\server\util\PayloadFactory.java

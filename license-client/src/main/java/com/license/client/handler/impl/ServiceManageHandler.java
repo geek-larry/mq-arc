@@ -4,7 +4,7 @@ import com.license.client.handler.AbstractMessageHandler;
 import com.license.common.enums.OperationType;
 import com.license.common.enums.SoftwareType;
 import com.license.common.message.LicenseMessage;
-import com.license.common.payload.ServiceManagePayload;
+import com.license.common.payload.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 @Component
-public class ServiceManageHandler extends AbstractMessageHandler<ServiceManagePayload, Void> {
+public class ServiceManageHandler extends AbstractMessageHandler<Object, Void> {
 
     @Autowired
     private String clientHostname;
@@ -48,35 +48,53 @@ public class ServiceManageHandler extends AbstractMessageHandler<ServiceManagePa
     }
 
     @Override
-    protected Void doHandle(LicenseMessage<ServiceManagePayload> message) throws Exception {
-        ServiceManagePayload payload = message.getPayload();
+    protected Void doHandle(LicenseMessage<Object> message) throws Exception {
+        Object payloadObj = message.getPayload();
         SoftwareType softwareType = message.getSoftwareType();
         OperationType operationType = message.getOperationType();
         
-        String serviceKey = buildServiceKey(softwareType, payload.getServiceName());
+        // 根据软件类型处理不同的Payload
+        switch (softwareType) {
+            case FLEXNET:
+                handleFlexnetService((FlexnetServiceManagePayload) payloadObj, operationType);
+                break;
+            case SENTINEL:
+                handleSentinelService((SentinelServiceManagePayload) payloadObj, operationType);
+                break;
+            case LMX:
+                handleLmxService((LmxServiceManagePayload) payloadObj, operationType);
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported software type: " + softwareType);
+        }
         
-        log.info("Managing service [{}] for {}: operation={}, port={}",
-                payload.getServiceName(), softwareType, operationType, payload.getPort());
+        return null;
+    }
+
+    private void handleFlexnetService(FlexnetServiceManagePayload payload, OperationType operationType) throws Exception {
+        String serviceKey = buildServiceKey(SoftwareType.FLEXNET, payload.getVendorDaemonName());
         
-        // 模拟处理延迟
+        log.info("Managing Flexnet service [{}] operation={}, port={}",
+                payload.getVendorDaemonName(), operationType, payload.getPort());
+        
         simulateDelay(500, 2000);
         
         boolean success;
         switch (operationType) {
             case START:
-                success = simulateStartService(softwareType, payload);
+                success = simulateFlexnetStart(payload);
                 if (success) {
                     serviceStatus.put(serviceKey, true);
                 }
                 break;
             case STOP:
-                success = simulateStopService(softwareType, payload);
+                success = simulateFlexnetStop(payload);
                 if (success) {
                     serviceStatus.put(serviceKey, false);
                 }
                 break;
             case RESTART:
-                success = simulateRestartService(softwareType, payload);
+                success = simulateFlexnetRestart(payload);
                 if (success) {
                     serviceStatus.put(serviceKey, true);
                 }
@@ -86,62 +104,136 @@ public class ServiceManageHandler extends AbstractMessageHandler<ServiceManagePa
         }
         
         if (!success) {
-            throw new RuntimeException("Failed to " + operationType.getCode() + " service: " + payload.getServiceName());
+            throw new RuntimeException("Failed to " + operationType.getCode() + " Flexnet service: " + payload.getVendorDaemonName());
         }
         
-        log.info("Service [{}] {} successfully for {}", 
-                payload.getServiceName(), operationType.getCode(), softwareType);
-        return null;
+        log.info("Flexnet service [{}] {} successfully", payload.getVendorDaemonName(), operationType.getCode());
     }
 
-    /**
-     * 模拟启动服务
-     */
-    private boolean simulateStartService(SoftwareType softwareType, ServiceManagePayload payload) {
-        log.debug("Starting {} service: {}, port: {}, params: {}",
-                softwareType, payload.getServiceName(), payload.getPort(), payload.getStartupParams());
+    private void handleSentinelService(SentinelServiceManagePayload payload, OperationType operationType) throws Exception {
+        String serviceKey = buildServiceKey(SoftwareType.SENTINEL, payload.getServerName());
         
-        // 模拟85%成功率
-        boolean success = simulateRandomSuccess(0.85);
+        log.info("Managing Sentinel service [{}] operation={}, port={}",
+                payload.getServerName(), operationType, payload.getPort());
         
-        if (success) {
-            log.debug("{} service {} started on port {}",
-                    softwareType, payload.getServiceName(), payload.getPort());
+        simulateDelay(500, 2000);
+        
+        boolean success;
+        switch (operationType) {
+            case START:
+                success = simulateSentinelStart(payload);
+                if (success) {
+                    serviceStatus.put(serviceKey, true);
+                }
+                break;
+            case STOP:
+                success = simulateSentinelStop(payload);
+                if (success) {
+                    serviceStatus.put(serviceKey, false);
+                }
+                break;
+            case RESTART:
+                success = simulateSentinelRestart(payload);
+                if (success) {
+                    serviceStatus.put(serviceKey, true);
+                }
+                break;
+            default:
+                throw new UnsupportedOperationException("Unsupported operation: " + operationType);
         }
         
-        return success;
+        if (!success) {
+            throw new RuntimeException("Failed to " + operationType.getCode() + " Sentinel service: " + payload.getServerName());
+        }
+        
+        log.info("Sentinel service [{}] {} successfully", payload.getServerName(), operationType.getCode());
     }
 
-    /**
-     * 模拟停止服务
-     */
-    private boolean simulateStopService(SoftwareType softwareType, ServiceManagePayload payload) {
-        log.debug("Stopping {} service: {}", softwareType, payload.getServiceName());
+    private void handleLmxService(LmxServiceManagePayload payload, OperationType operationType) throws Exception {
+        String serviceKey = buildServiceKey(SoftwareType.LMX, payload.getServerName());
         
-        // 模拟95%成功率
-        boolean success = simulateRandomSuccess(0.95);
+        log.info("Managing LMX service [{}] operation={}, port={}",
+                payload.getServerName(), operationType, payload.getPort());
         
-        if (success) {
-            log.debug("{} service {} stopped", softwareType, payload.getServiceName());
+        simulateDelay(500, 2000);
+        
+        boolean success;
+        switch (operationType) {
+            case START:
+                success = simulateLmxStart(payload);
+                if (success) {
+                    serviceStatus.put(serviceKey, true);
+                }
+                break;
+            case STOP:
+                success = simulateLmxStop(payload);
+                if (success) {
+                    serviceStatus.put(serviceKey, false);
+                }
+                break;
+            case RESTART:
+                success = simulateLmxRestart(payload);
+                if (success) {
+                    serviceStatus.put(serviceKey, true);
+                }
+                break;
+            default:
+                throw new UnsupportedOperationException("Unsupported operation: " + operationType);
         }
         
-        return success;
+        if (!success) {
+            throw new RuntimeException("Failed to " + operationType.getCode() + " LMX service: " + payload.getServerName());
+        }
+        
+        log.info("LMX service [{}] {} successfully", payload.getServerName(), operationType.getCode());
     }
 
-    /**
-     * 模拟重启服务
-     */
-    private boolean simulateRestartService(SoftwareType softwareType, ServiceManagePayload payload) {
-        log.debug("Restarting {} service: {}", softwareType, payload.getServiceName());
-        
-        // 模拟80%成功率
-        boolean success = simulateRandomSuccess(0.8);
-        
-        if (success) {
-            log.debug("{} service {} restarted", softwareType, payload.getServiceName());
-        }
-        
-        return success;
+    private boolean simulateFlexnetStart(FlexnetServiceManagePayload payload) {
+        log.debug("Starting Flexnet service: {}, port: {}, params: {}",
+                payload.getVendorDaemonName(), payload.getPort(), payload.getVendorOptions());
+        return simulateRandomSuccess(0.85);
+    }
+
+    private boolean simulateFlexnetStop(FlexnetServiceManagePayload payload) {
+        log.debug("Stopping Flexnet service: {}", payload.getVendorDaemonName());
+        return simulateRandomSuccess(0.95);
+    }
+
+    private boolean simulateFlexnetRestart(FlexnetServiceManagePayload payload) {
+        log.debug("Restarting Flexnet service: {}", payload.getVendorDaemonName());
+        return simulateRandomSuccess(0.8);
+    }
+
+    private boolean simulateSentinelStart(SentinelServiceManagePayload payload) {
+        log.debug("Starting Sentinel service: {}, port: {}, params: {}",
+                payload.getServerName(), payload.getPort(), payload.getServerOptions());
+        return simulateRandomSuccess(0.85);
+    }
+
+    private boolean simulateSentinelStop(SentinelServiceManagePayload payload) {
+        log.debug("Stopping Sentinel service: {}", payload.getServerName());
+        return simulateRandomSuccess(0.95);
+    }
+
+    private boolean simulateSentinelRestart(SentinelServiceManagePayload payload) {
+        log.debug("Restarting Sentinel service: {}", payload.getServerName());
+        return simulateRandomSuccess(0.8);
+    }
+
+    private boolean simulateLmxStart(LmxServiceManagePayload payload) {
+        log.debug("Starting LMX service: {}, port: {}, params: {}",
+                payload.getServerName(), payload.getPort(), payload.getServerOptions());
+        return simulateRandomSuccess(0.85);
+    }
+
+    private boolean simulateLmxStop(LmxServiceManagePayload payload) {
+        log.debug("Stopping LMX service: {}", payload.getServerName());
+        return simulateRandomSuccess(0.95);
+    }
+
+    private boolean simulateLmxRestart(LmxServiceManagePayload payload) {
+        log.debug("Restarting LMX service: {}", payload.getServerName());
+        return simulateRandomSuccess(0.8);
     }
 
     private String buildServiceKey(SoftwareType softwareType, String serviceName) {

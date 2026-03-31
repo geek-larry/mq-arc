@@ -3,7 +3,11 @@ package com.license.server.controller;
 import com.license.common.enums.SoftwareType;
 import com.license.common.message.LicenseResponse;
 import com.license.common.payload.*;
+import com.license.common.payload.kickout.*;
+import com.license.common.payload.service.*;
+import com.license.common.payload.whitelist.*;
 import com.license.server.service.LicenseMgmtService;
+import com.license.server.util.PayloadFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -28,9 +32,10 @@ public class LicenseMgmtController {
     public ResponseEntity<LicenseResponse<Void>> kickoutUser(
             @PathVariable SoftwareType softwareType,
             @PathVariable String hostname,
-            @RequestBody UserKickoutPayload payload) {
+            @RequestBody Object payload) {
         log.info("API: Kickout user from {} on {}", softwareType, hostname);
-        LicenseResponse<Void> response = licenseMgmtService.kickoutUser(softwareType, hostname, payload);
+        BasePayload typedPayload = PayloadFactory.createKickoutPayload(softwareType, payload);
+        LicenseResponse<Void> response = licenseMgmtService.kickoutUser(softwareType, hostname, typedPayload);
         return ResponseEntity.ok(response);
     }
 
@@ -40,9 +45,10 @@ public class LicenseMgmtController {
     public ResponseEntity<LicenseResponse<Void>> startService(
             @PathVariable SoftwareType softwareType,
             @PathVariable String hostname,
-            @RequestBody ServiceManagePayload payload) {
+            @RequestBody Object payload) {
         log.info("API: Start {} service on {}", softwareType, hostname);
-        LicenseResponse<Void> response = licenseMgmtService.startService(softwareType, hostname, payload);
+        BasePayload typedPayload = PayloadFactory.createServiceManagePayload(softwareType, payload);
+        LicenseResponse<Void> response = licenseMgmtService.startService(softwareType, hostname, typedPayload);
         return ResponseEntity.ok(response);
     }
 
@@ -50,9 +56,10 @@ public class LicenseMgmtController {
     public ResponseEntity<LicenseResponse<Void>> stopService(
             @PathVariable SoftwareType softwareType,
             @PathVariable String hostname,
-            @RequestBody ServiceManagePayload payload) {
+            @RequestBody Object payload) {
         log.info("API: Stop {} service on {}", softwareType, hostname);
-        LicenseResponse<Void> response = licenseMgmtService.stopService(softwareType, hostname, payload);
+        BasePayload typedPayload = PayloadFactory.createServiceManagePayload(softwareType, payload);
+        LicenseResponse<Void> response = licenseMgmtService.stopService(softwareType, hostname, typedPayload);
         return ResponseEntity.ok(response);
     }
 
@@ -60,9 +67,10 @@ public class LicenseMgmtController {
     public ResponseEntity<LicenseResponse<Void>> restartService(
             @PathVariable SoftwareType softwareType,
             @PathVariable String hostname,
-            @RequestBody ServiceManagePayload payload) {
+            @RequestBody Object payload) {
         log.info("API: Restart {} service on {}", softwareType, hostname);
-        LicenseResponse<Void> response = licenseMgmtService.restartService(softwareType, hostname, payload);
+        BasePayload typedPayload = PayloadFactory.createServiceManagePayload(softwareType, payload);
+        LicenseResponse<Void> response = licenseMgmtService.restartService(softwareType, hostname, typedPayload);
         return ResponseEntity.ok(response);
     }
 
@@ -72,9 +80,10 @@ public class LicenseMgmtController {
     public ResponseEntity<LicenseResponse<Void>> initWhitelist(
             @PathVariable SoftwareType softwareType,
             @PathVariable String hostname,
-            @RequestBody WhitelistManagePayload payload) {
+            @RequestBody Object payload) {
         log.info("API: Init {} whitelist on {}", softwareType, hostname);
-        LicenseResponse<Void> response = licenseMgmtService.initWhitelist(softwareType, hostname, payload);
+        BasePayload typedPayload = PayloadFactory.createWhitelistPayload(softwareType, payload);
+        LicenseResponse<Void> response = licenseMgmtService.initWhitelist(softwareType, hostname, typedPayload);
         return ResponseEntity.ok(response);
     }
 
@@ -82,9 +91,10 @@ public class LicenseMgmtController {
     public ResponseEntity<LicenseResponse<Void>> addWhitelistUser(
             @PathVariable SoftwareType softwareType,
             @PathVariable String hostname,
-            @RequestBody WhitelistManagePayload payload) {
+            @RequestBody Object payload) {
         log.info("API: Add {} whitelist user on {}", softwareType, hostname);
-        LicenseResponse<Void> response = licenseMgmtService.addWhitelistUser(softwareType, hostname, payload);
+        BasePayload typedPayload = PayloadFactory.createWhitelistPayload(softwareType, payload);
+        LicenseResponse<Void> response = licenseMgmtService.addWhitelistUser(softwareType, hostname, typedPayload);
         return ResponseEntity.ok(response);
     }
 
@@ -92,23 +102,22 @@ public class LicenseMgmtController {
     public ResponseEntity<LicenseResponse<Void>> removeWhitelistUser(
             @PathVariable SoftwareType softwareType,
             @PathVariable String hostname,
-            @RequestBody WhitelistManagePayload payload) {
+            @RequestBody Object payload) {
         log.info("API: Remove {} whitelist user on {}", softwareType, hostname);
-        LicenseResponse<Void> response = licenseMgmtService.removeWhitelistUser(softwareType, hostname, payload);
+        BasePayload typedPayload = PayloadFactory.createWhitelistPayload(softwareType, payload);
+        LicenseResponse<Void> response = licenseMgmtService.removeWhitelistUser(softwareType, hostname, typedPayload);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{softwareType}/{hostname}/whitelist/users")
-    public ResponseEntity<LicenseResponse<List<WhitelistManagePayload.WhitelistUser>>> queryWhitelistUsers(
+    public ResponseEntity<LicenseResponse<List<?>>> queryWhitelistUsers(
             @PathVariable SoftwareType softwareType,
             @PathVariable String hostname,
             @RequestParam(required = false) String queryCondition) {
         log.info("API: Query {} whitelist users on {}", softwareType, hostname);
-        WhitelistManagePayload payload = WhitelistManagePayload.builder()
-                .queryCondition(queryCondition)
-                .build();
-        LicenseResponse<List<WhitelistManagePayload.WhitelistUser>> response = 
-                licenseMgmtService.queryWhitelistUsers(softwareType, hostname, payload);
+        BasePayload typedPayload = PayloadFactory.createWhitelistPayload(softwareType, 
+                WhitelistManagePayload.builder().queryCondition(queryCondition).build());
+        LicenseResponse<List<?>> response = licenseMgmtService.queryWhitelistUsers(softwareType, hostname, typedPayload);
         return ResponseEntity.ok(response);
     }
 

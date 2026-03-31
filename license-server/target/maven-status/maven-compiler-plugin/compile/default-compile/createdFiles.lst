@@ -1,7 +1,13 @@
 com\license\server\service\LicenseMgmtService.class
 com\license\server\LicenseServerApplication.class
+com\license\server\config\RocketMQConsumerConfig.class
+com\license\server\listener\ResponseMessageListener.class
+com\license\server\config\RocketMQStarter.class
+com\license\server\util\PayloadFactory.class
+com\license\server\config\RocketMQConsumerConfig$1.class
 com\license\server\service\MessagePublishService.class
+com\license\server\util\PayloadFactory$1.class
+com\license\server\config\RocketMQProducerConfig.class
 com\license\server\controller\LicenseMgmtController.class
 com\license\server\service\MessagePublishService$1.class
 com\license\server\config\RocketMQConfig.class
-com\license\server\listener\ResponseMessageListener.class

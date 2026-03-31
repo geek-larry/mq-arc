@@ -5,6 +5,9 @@ import com.license.common.enums.OperationType;
 import com.license.common.enums.SoftwareType;
 import com.license.common.message.LicenseResponse;
 import com.license.common.payload.*;
+import com.license.common.payload.kickout.*;
+import com.license.common.payload.service.*;
+import com.license.common.payload.whitelist.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,8 +31,8 @@ public class LicenseMgmtService {
      * 踢出浮动许可用户
      */
     public LicenseResponse<Void> kickoutUser(SoftwareType softwareType, String hostname, 
-                                              UserKickoutPayload payload) {
-        log.info("Request to kickout user from {} on {}: {}", softwareType, hostname, payload.getUsername());
+                                              Object payload) {
+        log.info("Request to kickout user from {} on {}", softwareType, hostname);
         
         return messagePublishService.sendAndWait(
                 LicenseConstants.TOPIC_USER_MGMT,
@@ -47,7 +50,7 @@ public class LicenseMgmtService {
      * 启动许可服务
      */
     public LicenseResponse<Void> startService(SoftwareType softwareType, String hostname,
-                                               ServiceManagePayload payload) {
+                                               Object payload) {
         log.info("Request to start {} service on {}", softwareType, hostname);
         
         return messagePublishService.sendAndWait(
@@ -64,7 +67,7 @@ public class LicenseMgmtService {
      * 停止许可服务
      */
     public LicenseResponse<Void> stopService(SoftwareType softwareType, String hostname,
-                                              ServiceManagePayload payload) {
+                                              Object payload) {
         log.info("Request to stop {} service on {}", softwareType, hostname);
         
         return messagePublishService.sendAndWait(
@@ -81,7 +84,7 @@ public class LicenseMgmtService {
      * 重启许可服务
      */
     public LicenseResponse<Void> restartService(SoftwareType softwareType, String hostname,
-                                                 ServiceManagePayload payload) {
+                                                 Object payload) {
         log.info("Request to restart {} service on {}", softwareType, hostname);
         
         return messagePublishService.sendAndWait(
@@ -100,7 +103,7 @@ public class LicenseMgmtService {
      * 初始化白名单
      */
     public LicenseResponse<Void> initWhitelist(SoftwareType softwareType, String hostname,
-                                                WhitelistManagePayload payload) {
+                                                Object payload) {
         log.info("Request to init {} whitelist on {}", softwareType, hostname);
         
         return messagePublishService.sendAndWait(
@@ -117,9 +120,8 @@ public class LicenseMgmtService {
      * 添加白名单用户
      */
     public LicenseResponse<Void> addWhitelistUser(SoftwareType softwareType, String hostname,
-                                                   WhitelistManagePayload payload) {
-        log.info("Request to add {} whitelist user on {}: {}", 
-                softwareType, hostname, payload.getUser() != null ? payload.getUser().getUsername() : "unknown");
+                                                   Object payload) {
+        log.info("Request to add {} whitelist user on {}", softwareType, hostname);
         
         return messagePublishService.sendAndWait(
                 LicenseConstants.TOPIC_WHITELIST_MGMT,
@@ -135,9 +137,8 @@ public class LicenseMgmtService {
      * 删除白名单用户
      */
     public LicenseResponse<Void> removeWhitelistUser(SoftwareType softwareType, String hostname,
-                                                      WhitelistManagePayload payload) {
-        log.info("Request to remove {} whitelist user on {}: {}",
-                softwareType, hostname, payload.getUser() != null ? payload.getUser().getUsername() : "unknown");
+                                                      Object payload) {
+        log.info("Request to remove {} whitelist user on {}", softwareType, hostname);
         
         return messagePublishService.sendAndWait(
                 LicenseConstants.TOPIC_WHITELIST_MGMT,
@@ -152,8 +153,9 @@ public class LicenseMgmtService {
     /**
      * 查询白名单用户
      */
-    public LicenseResponse<List<WhitelistManagePayload.WhitelistUser>> queryWhitelistUsers(
-            SoftwareType softwareType, String hostname, WhitelistManagePayload payload) {
+    @SuppressWarnings("unchecked")
+    public LicenseResponse<List<?>> queryWhitelistUsers(
+            SoftwareType softwareType, String hostname, Object payload) {
         log.info("Request to query {} whitelist users on {}", softwareType, hostname);
         
         return messagePublishService.sendAndWait(
@@ -162,7 +164,7 @@ public class LicenseMgmtService {
                 OperationType.QUERY,
                 hostname,
                 payload,
-                (Class<List<WhitelistManagePayload.WhitelistUser>>) (Class<?>) List.class
+                (Class<List<?>>) (Class<?>) List.class
         );
     }
 

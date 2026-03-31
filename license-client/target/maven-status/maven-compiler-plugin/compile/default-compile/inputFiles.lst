@@ -1,5 +1,8 @@
 D:\.code\Java\mq-arc\license-client\src\main\java\com\license\client\config\ClientConfig.java
 D:\.code\Java\mq-arc\license-client\src\main\java\com\license\client\config\MultiTopicListenerConfig.java
+D:\.code\Java\mq-arc\license-client\src\main\java\com\license\client\config\RocketMQConsumerConfig.java
+D:\.code\Java\mq-arc\license-client\src\main\java\com\license\client\config\RocketMQProducerConfig.java
+D:\.code\Java\mq-arc\license-client\src\main\java\com\license\client\config\RocketMQStarter.java
 D:\.code\Java\mq-arc\license-client\src\main\java\com\license\client\handler\AbstractMessageHandler.java
 D:\.code\Java\mq-arc\license-client\src\main\java\com\license\client\handler\impl\FileManageHandler.java
 D:\.code\Java\mq-arc\license-client\src\main\java\com\license\client\handler\impl\MonitorUsageHandler.java
