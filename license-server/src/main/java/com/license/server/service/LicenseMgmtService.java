@@ -216,7 +216,7 @@ public class LicenseMgmtService {
                 OperationType.QUERY,
                 hostname,
                 payload,
-                List.class
+                (Class<List<?>>) (Class<?>) List.class
         );
     }
 
@@ -229,16 +229,17 @@ public class LicenseMgmtService {
      * @param payload 文件管理参数
      * @return 许可响应，包含文件列表
      */
+    @SuppressWarnings("unchecked")
     public LicenseResponse<List<String>> queryLicenseFiles(String hostname, FileManagePayload payload) {
         log.info("Request to query license files on {}", hostname);
         
         return messagePublishService.sendAndWait(
                 LicenseConstants.TOPIC_FILE_MGMT,
-                null,  // 文件管理不涉及特定软件类型
+                SoftwareType.FLEXNET,  // 文件管理使用默认软件类型
                 OperationType.LICENSE_QUERY,
                 hostname,
                 payload,
-                List.class
+                (Class<List<String>>) (Class<?>) List.class
         );
     }
 
@@ -249,12 +250,13 @@ public class LicenseMgmtService {
      * @param payload 文件管理参数
      * @return 许可响应
      */
+    @SuppressWarnings("unchecked")
     public LicenseResponse<Void> updateLicenseFile(String hostname, FileManagePayload payload) {
         log.info("Request to update license file on {}: {}", hostname, payload.getFileName());
         
         return messagePublishService.sendAndWait(
                 LicenseConstants.TOPIC_FILE_MGMT,
-                null,
+                SoftwareType.FLEXNET,  // 文件管理使用默认软件类型
                 OperationType.LICENSE_UPDATE,
                 hostname,
                 payload,
@@ -269,16 +271,17 @@ public class LicenseMgmtService {
      * @param payload 文件管理参数
      * @return 许可响应，包含Base64编码的文件内容
      */
+    @SuppressWarnings("unchecked")
     public LicenseResponse<String> downloadLicenseFile(String hostname, FileManagePayload payload) {
         log.info("Request to download license file on {}: {}", hostname, payload.getFileName());
         
         return messagePublishService.sendAndWait(
                 LicenseConstants.TOPIC_FILE_MGMT,
-                null,
+                SoftwareType.FLEXNET,  // 文件管理使用默认软件类型
                 OperationType.LICENSE_DOWNLOAD,
                 hostname,
                 payload,
-                String.class  // Base64编码的文件内容
+                (Class<String>) (Class<?>) String.class
         );
     }
 
@@ -289,16 +292,17 @@ public class LicenseMgmtService {
      * @param payload 文件管理参数
      * @return 许可响应，包含文件列表
      */
+    @SuppressWarnings("unchecked")
     public LicenseResponse<List<String>> queryLogFiles(String hostname, FileManagePayload payload) {
         log.info("Request to query log files on {}", hostname);
         
         return messagePublishService.sendAndWait(
                 LicenseConstants.TOPIC_FILE_MGMT,
-                null,
+                SoftwareType.FLEXNET,  // 文件管理使用默认软件类型
                 OperationType.LOG_QUERY,
                 hostname,
                 payload,
-                List.class
+                (Class<List<String>>) (Class<?>) List.class
         );
     }
 
@@ -309,16 +313,17 @@ public class LicenseMgmtService {
      * @param payload 文件管理参数
      * @return 许可响应，包含Base64编码的文件内容
      */
+    @SuppressWarnings("unchecked")
     public LicenseResponse<String> downloadLogFile(String hostname, FileManagePayload payload) {
         log.info("Request to download log file on {}: {}", hostname, payload.getFileName());
         
         return messagePublishService.sendAndWait(
                 LicenseConstants.TOPIC_FILE_MGMT,
-                null,
+                SoftwareType.FLEXNET,  // 文件管理使用默认软件类型
                 OperationType.LOG_DOWNLOAD,
                 hostname,
                 payload,
-                String.class
+                (Class<String>) (Class<?>) String.class
         );
     }
 
@@ -333,6 +338,7 @@ public class LicenseMgmtService {
      * @param payload 监控数据参数
      * @return 许可响应，包含使用数据列表
      */
+    @SuppressWarnings("unchecked")
     public LicenseResponse<List<MonitorUsagePayload.UsageData>> collectUsageData(
             SoftwareType softwareType, String hostname, MonitorUsagePayload payload) {
         log.info("Request to collect {} usage data on {}, targets: {}",
@@ -345,7 +351,7 @@ public class LicenseMgmtService {
                 OperationType.USAGE,
                 hostname,
                 payload,
-                List.class
+                (Class<List<MonitorUsagePayload.UsageData>>) (Class<?>) List.class
         );
     }
 
