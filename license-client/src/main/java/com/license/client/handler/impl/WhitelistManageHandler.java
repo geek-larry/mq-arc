@@ -1,6 +1,7 @@
 package com.license.client.handler.impl;
 
 import com.license.client.handler.AbstractMessageHandler;
+import com.license.common.constant.LicenseConstants;
 import com.license.common.enums.OperationType;
 import com.license.common.enums.SoftwareType;
 import com.license.common.message.LicenseMessage;
@@ -27,28 +28,11 @@ public class WhitelistManageHandler extends AbstractMessageHandler<Object, Objec
     @Autowired
     private String clientHostname;
 
-    // 模拟白名单数据存储（使用通配符存储）
     private final Map<String, Object> whitelistStore = new HashMap<>();
 
     @Override
-    public String getOperationType() {
-        return "*";
-    }
-
-    @Override
-    public String getSoftwareType() {
-        return "*";
-    }
-
-    @Override
-    public boolean supports(LicenseMessage<?> message) {
-        if (message.getOperationType() == null) {
-            return false;
-        }
-        return message.getOperationType() == OperationType.INIT ||
-               message.getOperationType() == OperationType.ADD ||
-               message.getOperationType() == OperationType.REMOVE ||
-               message.getOperationType() == OperationType.QUERY;
+    public String getSupportedTopic() {
+        return LicenseConstants.TOPIC_WHITELIST_MGMT;
     }
 
     @Override

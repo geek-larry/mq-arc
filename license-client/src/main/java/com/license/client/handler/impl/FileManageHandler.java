@@ -1,6 +1,7 @@
 package com.license.client.handler.impl;
 
 import com.license.client.handler.AbstractMessageHandler;
+import com.license.common.constant.LicenseConstants;
 import com.license.common.enums.OperationType;
 import com.license.common.message.LicenseMessage;
 import com.license.common.payload.FileManagePayload;
@@ -25,29 +26,11 @@ public class FileManageHandler extends AbstractMessageHandler<FileManagePayload,
     @Autowired
     private String clientHostname;
 
-    // 模拟文件存储
     private final Map<String, String> fileStore = new ConcurrentHashMap<>();
 
     @Override
-    public String getOperationType() {
-        return "*";
-    }
-
-    @Override
-    public String getSoftwareType() {
-        return "*";
-    }
-
-    @Override
-    public boolean supports(LicenseMessage<?> message) {
-        if (message.getOperationType() == null) {
-            return false;
-        }
-        return message.getOperationType() == OperationType.LICENSE_QUERY ||
-               message.getOperationType() == OperationType.LICENSE_UPDATE ||
-               message.getOperationType() == OperationType.LICENSE_DOWNLOAD ||
-               message.getOperationType() == OperationType.LOG_QUERY ||
-               message.getOperationType() == OperationType.LOG_DOWNLOAD;
+    public String getSupportedTopic() {
+        return LicenseConstants.TOPIC_FILE_MGMT;
     }
 
     @Override

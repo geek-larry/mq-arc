@@ -1,6 +1,7 @@
 package com.license.client.handler.impl;
 
 import com.license.client.handler.AbstractMessageHandler;
+import com.license.common.constant.LicenseConstants;
 import com.license.common.enums.OperationType;
 import com.license.common.enums.SoftwareType;
 import com.license.common.message.LicenseMessage;
@@ -23,28 +24,11 @@ public class ServiceManageHandler extends AbstractMessageHandler<Object, Void> {
     @Autowired
     private String clientHostname;
 
-    // 模拟服务状态存储
     private final Map<String, Boolean> serviceStatus = new ConcurrentHashMap<>();
 
     @Override
-    public String getOperationType() {
-        // 支持多种操作类型
-        return "*";
-    }
-
-    @Override
-    public String getSoftwareType() {
-        return "*";
-    }
-
-    @Override
-    public boolean supports(LicenseMessage<?> message) {
-        if (message.getOperationType() == null) {
-            return false;
-        }
-        return message.getOperationType() == OperationType.START ||
-               message.getOperationType() == OperationType.STOP ||
-               message.getOperationType() == OperationType.RESTART;
+    public String getSupportedTopic() {
+        return LicenseConstants.TOPIC_SERVICE_MGMT;
     }
 
     @Override

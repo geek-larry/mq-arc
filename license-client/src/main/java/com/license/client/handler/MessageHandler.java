@@ -6,18 +6,18 @@ import com.license.common.message.LicenseResponse;
 /**
  * 消息处理器接口
  * 定义各类消息的处理逻辑
+ * 
+ * 匹配规则：
+ * 按照topic匹配找到对应的handler
  */
 public interface MessageHandler<T, R> {
 
     /**
-     * 获取处理器支持的操作类型
+     * 获取处理器支持的Topic
+     * 
+     * @return Topic名称，返回"*"表示支持所有Topic
      */
-    String getOperationType();
-
-    /**
-     * 获取处理器支持的软件类型
-     */
-    String getSoftwareType();
+    String getSupportedTopic();
 
     /**
      * 处理消息
@@ -29,18 +29,22 @@ public interface MessageHandler<T, R> {
 
     /**
      * 是否支持该消息
+     * 
+     * 检查topic是否匹配
      *
      * @param message 消息对象
      * @return 是否支持
      */
     default boolean supports(LicenseMessage<?> message) {
-        if (message.getOperationType() == null || message.getSoftwareType() == null) {
+        if (message == null) {
             return false;
         }
-        boolean operationMatch = "*".equals(getOperationType()) || 
-                               message.getOperationType().getCode().equals(getOperationType());
-        boolean softwareMatch = "*".equals(getSoftwareType()) || 
-                               message.getSoftwareType().getCode().equals(getSoftwareType());
-        return operationMatch && softwareMatch;
+
+        if (message.getTopic() == null) {
+            return false;
+        }
+
+        return "*".equals(getSupportedTopic()) || 
+               message.getTopic().equals(getSupportedTopic());
     }
 }

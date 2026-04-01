@@ -1,6 +1,7 @@
 package com.license.client.handler.impl;
 
 import com.license.client.handler.AbstractMessageHandler;
+import com.license.common.constant.LicenseConstants;
 import com.license.common.enums.OperationType;
 import com.license.common.enums.SoftwareType;
 import com.license.common.message.LicenseMessage;
@@ -32,21 +33,8 @@ public class MonitorUsageHandler extends AbstractMessageHandler<MonitorUsagePayl
     private String clientHostname;
 
     @Override
-    public String getOperationType() {
-        return OperationType.USAGE.getCode();
-    }
-
-    @Override
-    public String getSoftwareType() {
-        return "*";
-    }
-
-    @Override
-    public boolean supports(LicenseMessage<?> message) {
-        if (message.getOperationType() == null) {
-            return false;
-        }
-        return message.getOperationType() == OperationType.USAGE;
+    public String getSupportedTopic() {
+        return LicenseConstants.TOPIC_MONITOR;
     }
 
     @Override
