@@ -1,7 +1,7 @@
 package com.license.client.handler;
 
 import com.license.common.message.LicenseMessage;
-import com.license.common.message.LicenseResponse;
+import com.license.common.mqtt.MqttClientService;
 
 /**
  * 消息处理器接口
@@ -21,11 +21,15 @@ public interface MessageHandler<T, R> {
 
     /**
      * 处理消息
+     * handler内部负责发送响应
      *
      * @param message 接收到的消息
-     * @return 处理结果
+     * @param mqttClientService MQTT客户端服务，用于发送响应
+     * @param sourceClientId 消息来源客户端ID
+     * @param operation 操作类型
      */
-    LicenseResponse<R> handle(LicenseMessage<T> message);
+    void handle(LicenseMessage<T> message, MqttClientService mqttClientService, 
+                String sourceClientId, String operation);
 
     /**
      * 是否支持该消息

@@ -5,25 +5,20 @@ spring:
   application:
     name: license-server
 
-# RocketMQ 配置
-rocketmq:
-  name-server: localhost:9876
-  producer:
-    group: license-server-producer-group
-    send-message-timeout: 30000
-    retry-times-when-send-failed: 3
-    retry-times-when-send-async-failed: 3
+mqtt:
+  broker-url: tcp://localhost:1883
+  connection-timeout: 30
+  keep-alive-interval: 60
+  auto-reconnect: true
+  clean-session: true
+  qos: 1
+  timeout: 30000
 
-# 许可系统配置
 license:
-  message:
-    timeout: 30000
   server:
-    consumer:
-      group: license-server-response-group
+    id: license-server
 
-# 日志配置
 logging:
   level:
-    com.license.server: INFO
-    org.apache.rocketmq: WARN
+    root: INFO
+    com.license: DEBUG

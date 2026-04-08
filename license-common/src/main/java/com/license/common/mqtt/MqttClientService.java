@@ -1,0 +1,186 @@
+package com.license.common.mqtt;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.license.common.config.MqttProperties;
+import com.license.common.message.LicenseMessage;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.paho.client.mqttv3.*;
+
+/**
+ * MQTT客户端服务
+ * 支持P2P通信模式，基于clientId路由
+ */
+@Slf4j
+public class MqttClientService implements MqttCallback {
+
+    private final MqttProperties properties;
+    private final ObjectMapper objectMapper;
+    private final MqttAsyncClient client;
+    private final String clientId;
+    
+    private MqttMessageListener messageListener;
+    private volatile boolean isConnected = false;
+
+    public MqttClientService(MqttProperties properties, ObjectMapper objectMapper, String hostname) throws MqttException {
+        this.properties = properties;
+        this.objectMapper = objectMapper;
+        this.clientId = hostname; // 使用hostname作为clientId
+        
+        this.client = new MqttAsyncClient(properties.getBrokerUrl(), clientId);
+        this.client.setCallback(this);
+    }
+
+    public void start() {
+        try {
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setCleanSession(properties.isCleanSession());
+            options.setConnectionTimeout(properties.getConnectionTimeout());
+            options.setKeepAliveInterval(properties.getKeepAliveInterval());
+            options.setAutomaticReconnect(properties.isAutoReconnect());
+            
+            if (properties.getUsername() != null && !properties.getUsername().isEmpty()) {
+                options.setUserName(properties.getUsername());
+            }
+            if (properties.getPassword() != null && !properties.getPassword().isEmpty()) {
+                options.setPassword(properties.getPassword().toCharArray());
+            }
+            
+            log.info("Connecting to MQTT broker: {}, clientId: {}", properties.getBrokerUrl(), clientId);
+            client.connect(options).waitForCompletion();
+            isConnected = true;
+            
+            log.info("MQTT client connected successfully, clientId: {}", clientId);
+        } catch (Exception e) {
+            log.error("Failed to start MQTT client, clientId: {}", clientId, e);
+            throw new RuntimeException("Failed to start MQTT client", e);
+        }
+    }
+
+    public void stop() {
+        try {
+            isConnected = false;
+            
+            if (client.isConnected()) {
+                client.disconnect().waitForCompletion();
+                log.info("MQTT client disconnected, clientId: {}", clientId);
+            }
+            client.close();
+            log.info("MQTT client closed, clientId: {}", clientId);
+        } catch (Exception e) {
+            log.error("Failed to stop MQTT client, clientId: {}", clientId, e);
+        }
+    }
+
+    /**
+     * 发送消息到指定客户端（P2P模式）
+     * Topic格式: license/{targetClientId}/{operation}
+     */
+    public void sendToClient(String targetClientId, String operation, LicenseMessage<?> message) {
+        if (!isConnected || !client.isConnected()) {
+            throw new IllegalStateException("MQTT client is not connected");
+        }
+        
+        String topic = buildP2PTopic(targetClientId, operation);
+        
+        try {
+            String json = objectMapper.writeValueAsString(message);
+            MqttMessage mqttMessage = new MqttMessage(json.getBytes());
+            mqttMessage.setQos(properties.getQos());
+            
+            log.info("Sending P2P message to client: {}, operation: {}, messageId: {}, size: {} bytes",
+                targetClientId, operation, message.getMessageId(), json.length());
+            
+            client.publish(topic, mqttMessage).waitForCompletion();
+        } catch (Exception e) {
+            log.error("Failed to send P2P message, targetClientId: {}, operation: {}", targetClientId, operation, e);
+            throw new RuntimeException("Failed to send P2P message", e);
+        }
+    }
+
+    /**
+     * 订阅接收消息（P2P模式）
+     * 使用$deliver前缀时，接收方订阅的是去掉$deliver/{clientId}后的topic
+     * 订阅Topic: license/#
+     */
+    public void subscribeIncomingMessages() {
+        String topic = "license/#";
+        subscribe(topic);
+        log.info("Subscribed to incoming messages, topic: {}", topic);
+    }
+
+    /**
+     * 订阅Topic
+     */
+    private void subscribe(String topic) {
+        try {
+            client.subscribe(topic, properties.getQos()).waitForCompletion();
+            log.debug("Subscribed to topic: {}", topic);
+        } catch (Exception e) {
+            log.error("Failed to subscribe to topic: {}", topic, e);
+            throw new RuntimeException("Failed to subscribe to topic", e);
+        }
+    }
+
+    /**
+     * 构建P2P Topic（EMQX直接投递模式）
+     * 使用$deliver前缀实现点对点直接投递，不经过路由表
+     * 发送Topic: $deliver/{targetClientId}/license/{operation}
+     * 接收方收到: license/{operation}
+     */
+    private String buildP2PTopic(String targetClientId, String operation) {
+        return "$deliver/" + targetClientId + "/license/" + operation;
+    }
+
+    /**
+     * 设置消息监听器
+     */
+    public void setMessageListener(MqttMessageListener messageListener) {
+        this.messageListener = messageListener;
+    }
+
+    @Override
+    public void connectionLost(Throwable cause) {
+        isConnected = false;
+        log.error("MQTT connection lost, clientId: {}, will auto-reconnect if enabled", clientId, cause);
+    }
+
+    @Override
+    public void messageArrived(String topic, MqttMessage message) throws Exception {
+        try {
+            String body = new String(message.getPayload());
+            
+            // 解析Topic获取操作类型
+            // 使用$deliver前缀时，接收方收到的topic格式: license/{operation}
+            String[] parts = topic.split("/");
+            String operation = parts.length > 1 ? parts[1] : null;
+            
+            // 请求消息
+            log.info("Received request message, topic: {}, operation: {}, size: {} bytes", topic, operation, body.length());
+            
+            LicenseMessage<?> licenseMessage = objectMapper.readValue(body, LicenseMessage.class);
+            
+            // 从消息体中获取发送方信息
+            String sourceClientId = licenseMessage.getHostname();
+            
+            if (messageListener != null) {
+                messageListener.onMessage(sourceClientId, operation, licenseMessage);
+            } else {
+                log.warn("No message listener registered, message ignored, topic: {}", topic);
+            }
+        } catch (Exception e) {
+            log.error("Failed to process arrived message, topic: {}, clientId: {}", topic, clientId, e);
+        }
+    }
+
+    @Override
+    public void deliveryComplete(IMqttDeliveryToken token) {
+        log.debug("Message delivery complete, messageId: {}", token.getMessageId());
+    }
+    
+    /**
+     * 消息监听器接口
+     */
+    public interface MqttMessageListener {
+        void onMessage(String sourceClientId, String operation, LicenseMessage<?> message);
+    }
+}

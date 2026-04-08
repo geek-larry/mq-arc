@@ -1,12 +1,9 @@
 package com.license.client.handler;
 
-import com.license.common.enums.MessageStatus;
 import com.license.common.exception.MessageProcessException;
 import com.license.common.message.LicenseMessage;
-import com.license.common.message.LicenseResponse;
+import com.license.common.mqtt.MqttClientService;
 import lombok.extern.slf4j.Slf4j;
-
-import java.time.LocalDateTime;
 
 /**
  * 消息处理器抽象基类
@@ -16,53 +13,25 @@ import java.time.LocalDateTime;
 public abstract class AbstractMessageHandler<T, R> implements MessageHandler<T, R> {
 
     @Override
-    public LicenseResponse<R> handle(LicenseMessage<T> message) {
+    public void handle(LicenseMessage<T> message, MqttClientService mqttClientService, 
+                       String sourceClientId, String operation) {
         long startTime = System.currentTimeMillis();
-        String hostname = getClientHostname();
         
         try {
             log.info("[{}] Processing message: businessKey={}, operation={}",
                     getHandlerName(), message.getBusinessKey(), message.getOperationType());
             
-            // 标记消息为处理中
-            message.markAsProcessing();
-            
             // 执行具体的业务逻辑
             R result = doHandle(message);
-            
-            // 标记消息为成功
-            message.markAsSuccess();
             
             long processTime = System.currentTimeMillis() - startTime;
             log.info("[{}] Message processed successfully: businessKey={}, time={}ms",
                     getHandlerName(), message.getBusinessKey(), processTime);
             
-            return LicenseResponse.success(
-                    message.getMessageId(),
-                    message.getCorrelationId(),
-                    message.getBusinessKey(),
-                    result,
-                    hostname
-            );
-            
         } catch (Exception e) {
             long processTime = System.currentTimeMillis() - startTime;
             log.error("[{}] Failed to process message: businessKey={}, time={}ms",
                     getHandlerName(), message.getBusinessKey(), processTime, e);
-            
-            // 标记消息为失败
-            String errorCode = e instanceof MessageProcessException ? 
-                    ((MessageProcessException) e).getErrorCode() : "PROCESS_ERROR";
-            message.markAsFailed(errorCode, e.getMessage());
-            
-            return LicenseResponse.failure(
-                    message.getMessageId(),
-                    message.getCorrelationId(),
-                    message.getBusinessKey(),
-                    errorCode,
-                    e.getMessage(),
-                    hostname
-            );
         }
     }
 

@@ -72,7 +72,6 @@ public final class LicenseConstants {
     public static final String MSG_KEY_SOFTWARE_TYPE = "softwareType";
     public static final String MSG_KEY_OPERATION = "operation";
     public static final String MSG_KEY_TIMESTAMP = "timestamp";
-    public static final String MSG_KEY_CORRELATION_ID = "correlationId";
 
     // ==================== 响应状态 ====================
     public static final String STATUS_SUCCESS = "SUCCESS";

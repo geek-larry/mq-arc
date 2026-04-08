@@ -1,29 +1,21 @@
-server:
-  port: 8081
-
 spring:
   application:
     name: license-client
 
-# RocketMQ 配置
-rocketmq:
-  name-server: localhost:9876
-  producer:
-    group: license-client-producer-group
-    send-message-timeout: 30000
+mqtt:
+  broker-url: tcp://localhost:1883
+  connection-timeout: 30
+  keep-alive-interval: 60
+  auto-reconnect: true
+  clean-session: true
+  qos: 1
+  timeout: 30000
 
-# 许可客户端配置
 license:
   client:
-    hostname: ${HOSTNAME:${COMPUTERNAME:unknown-host}}
-    consumer:
-      group: license-client-consumer-group
-  response:
-    topic: license-response
-    tag: default
+    hostname: client-01
 
-# 日志配置
 logging:
   level:
-    com.license.client: INFO
-    org.apache.rocketmq: WARN
+    root: INFO
+    com.license: DEBUG
