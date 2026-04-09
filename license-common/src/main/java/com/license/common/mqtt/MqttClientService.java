@@ -73,37 +73,36 @@ public class MqttClientService implements MqttCallback {
 
     /**
      * 发送消息到指定客户端（P2P模式）
-     * Topic格式: license/{targetClientId}/{operation}
+     * Topic格式: monitor/{targetClientId}
      */
-    public void sendToClient(String targetClientId, String operation, LicenseMessage<?> message) {
+    public void sendToClient(String targetClientId, LicenseMessage<?> message) {
         if (!isConnected || !client.isConnected()) {
             throw new IllegalStateException("MQTT client is not connected");
         }
         
-        String topic = buildP2PTopic(targetClientId, operation);
+        String topic = buildP2PTopic(targetClientId);
         
         try {
             String json = objectMapper.writeValueAsString(message);
             MqttMessage mqttMessage = new MqttMessage(json.getBytes());
             mqttMessage.setQos(properties.getQos());
             
-            log.info("Sending P2P message to client: {}, operation: {}, messageId: {}, size: {} bytes",
-                targetClientId, operation, message.getMessageId(), json.length());
+            log.info("Sending P2P message to client: {}, messageId: {}, size: {} bytes",
+                targetClientId, message.getMessageId(), json.length());
             
             client.publish(topic, mqttMessage).waitForCompletion();
         } catch (Exception e) {
-            log.error("Failed to send P2P message, targetClientId: {}, operation: {}", targetClientId, operation, e);
+            log.error("Failed to send P2P message, targetClientId: {}", targetClientId, e);
             throw new RuntimeException("Failed to send P2P message", e);
         }
     }
 
     /**
      * 订阅接收消息（P2P模式）
-     * 使用$deliver前缀时，接收方订阅的是去掉$deliver/{clientId}后的topic
-     * 订阅Topic: license/#
+     * 订阅Topic: monitor/{clientId}
      */
     public void subscribeIncomingMessages() {
-        String topic = "license/#";
+        String topic = "monitor/" + clientId;
         subscribe(topic);
         log.info("Subscribed to incoming messages, topic: {}", topic);
     }
@@ -122,13 +121,11 @@ public class MqttClientService implements MqttCallback {
     }
 
     /**
-     * 构建P2P Topic（EMQX直接投递模式）
-     * 使用$deliver前缀实现点对点直接投递，不经过路由表
-     * 发送Topic: $deliver/{targetClientId}/license/{operation}
-     * 接收方收到: license/{operation}
+     * 构建P2P Topic
+     * Topic格式: monitor/{targetClientId}
      */
-    private String buildP2PTopic(String targetClientId, String operation) {
-        return "$deliver/" + targetClientId + "/license/" + operation;
+    private String buildP2PTopic(String targetClientId) {
+        return "monitor/" + targetClientId;
     }
 
     /**
@@ -149,21 +146,12 @@ public class MqttClientService implements MqttCallback {
         try {
             String body = new String(message.getPayload());
             
-            // 解析Topic获取操作类型
-            // 使用$deliver前缀时，接收方收到的topic格式: license/{operation}
-            String[] parts = topic.split("/");
-            String operation = parts.length > 1 ? parts[1] : null;
-            
-            // 请求消息
-            log.info("Received request message, topic: {}, operation: {}, size: {} bytes", topic, operation, body.length());
+            log.info("Received request message, topic: {}, size: {} bytes", topic, body.length());
             
             LicenseMessage<?> licenseMessage = objectMapper.readValue(body, LicenseMessage.class);
             
-            // 从消息体中获取发送方信息
-            String sourceClientId = licenseMessage.getHostname();
-            
             if (messageListener != null) {
-                messageListener.onMessage(sourceClientId, operation, licenseMessage);
+                messageListener.onMessage(licenseMessage);
             } else {
                 log.warn("No message listener registered, message ignored, topic: {}", topic);
             }
@@ -181,6 +169,6 @@ public class MqttClientService implements MqttCallback {
      * 消息监听器接口
      */
     public interface MqttMessageListener {
-        void onMessage(String sourceClientId, String operation, LicenseMessage<?> message);
+        void onMessage(LicenseMessage<?> message);
     }
 }

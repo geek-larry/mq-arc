@@ -1,7 +1,5 @@
 D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\config\MqttProperties.java
-D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\constant\LicenseConstants.java
-D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\enums\OperationType.java
-D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\enums\SoftwareType.java
+D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\enums\MessageType.java
 D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\exception\MessageProcessException.java
 D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\message\LicenseMessage.java
 D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\mqtt\MqttClientService.java
@@ -9,3 +7,6 @@ D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\payload\Bas
 D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\payload\kickout\FlexnetUserKickoutPayload.java
 D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\payload\kickout\LmxUserKickoutPayload.java
 D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\payload\kickout\SentinelUserKickoutPayload.java
+D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\payload\renew\FlexnetUserRenewPayload.java
+D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\payload\renew\LmxUserRenewPayload.java
+D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\payload\renew\SentinelUserRenewPayload.java

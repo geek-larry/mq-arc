@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.license.common.config.MqttProperties;
 import com.license.common.mqtt.MqttClientService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,20 +17,18 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties(MqttProperties.class)
 public class MqttConfig {
 
-    @Value("${license.client.hostname:unknown}")
-    private String hostname;
+    @Autowired
+    private String clientHostname;
 
     @Bean
     public MqttClientService mqttClientService(MqttProperties properties, ObjectMapper objectMapper) {
         try {
-            // 使用hostname作为clientId，实现P2P通信
-            MqttClientService service = new MqttClientService(properties, objectMapper, hostname);
+            MqttClientService service = new MqttClientService(properties, objectMapper, clientHostname);
             service.start();
             
-            // 订阅接收消息
             service.subscribeIncomingMessages();
             
-            log.info("MQTT client service started for client: {}", hostname);
+            log.info("MQTT client service started for client: {}", clientHostname);
             return service;
         } catch (Exception e) {
             log.error("Failed to create MQTT client service", e);

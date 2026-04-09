@@ -10,28 +10,27 @@ import lombok.extern.slf4j.Slf4j;
  * 提供通用的处理逻辑和异常处理
  */
 @Slf4j
-public abstract class AbstractMessageHandler<T, R> implements MessageHandler<T, R> {
+public abstract class AbstractMessageHandler<T> implements MessageHandler<T> {
 
     @Override
-    public void handle(LicenseMessage<T> message, MqttClientService mqttClientService, 
-                       String sourceClientId, String operation) {
+    public void handle(LicenseMessage<T> message, MqttClientService mqttClientService) {
         long startTime = System.currentTimeMillis();
         
         try {
-            log.info("[{}] Processing message: businessKey={}, operation={}",
-                    getHandlerName(), message.getBusinessKey(), message.getOperationType());
+            log.info("[{}] Processing message: messageId={}, messageType={}, operationType={}",
+                    getHandlerName(), message.getMessageId(), message.getMessageType(), 
+                    message.getOperationType());
             
-            // 执行具体的业务逻辑
-            R result = doHandle(message);
+            doHandle(message);
             
             long processTime = System.currentTimeMillis() - startTime;
-            log.info("[{}] Message processed successfully: businessKey={}, time={}ms",
-                    getHandlerName(), message.getBusinessKey(), processTime);
+            log.info("[{}] Message processed successfully: messageId={}, time={}ms",
+                    getHandlerName(), message.getMessageId(), processTime);
             
         } catch (Exception e) {
             long processTime = System.currentTimeMillis() - startTime;
-            log.error("[{}] Failed to process message: businessKey={}, time={}ms",
-                    getHandlerName(), message.getBusinessKey(), processTime, e);
+            log.error("[{}] Failed to process message: messageId={}, time={}ms",
+                    getHandlerName(), message.getMessageId(), processTime, e);
         }
     }
 
@@ -39,7 +38,7 @@ public abstract class AbstractMessageHandler<T, R> implements MessageHandler<T, 
      * 执行具体的业务处理逻辑
      * 由子类实现
      */
-    protected abstract R doHandle(LicenseMessage<T> message) throws Exception;
+    protected abstract void doHandle(LicenseMessage<T> message) throws Exception;
 
     /**
      * 获取客户端主机名

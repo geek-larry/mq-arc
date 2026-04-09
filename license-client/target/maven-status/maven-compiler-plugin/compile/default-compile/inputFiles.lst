@@ -1,7 +1,7 @@
 D:\.code\Java\mq-arc\license-client\src\main\java\com\license\client\config\ClientConfig.java
 D:\.code\Java\mq-arc\license-client\src\main\java\com\license\client\config\MqttConfig.java
 D:\.code\Java\mq-arc\license-client\src\main\java\com\license\client\handler\AbstractMessageHandler.java
-D:\.code\Java\mq-arc\license-client\src\main\java\com\license\client\handler\impl\UserKickoutHandler.java
+D:\.code\Java\mq-arc\license-client\src\main\java\com\license\client\handler\impl\UserOperationHandler.java
 D:\.code\Java\mq-arc\license-client\src\main\java\com\license\client\handler\MessageHandler.java
 D:\.code\Java\mq-arc\license-client\src\main\java\com\license\client\LicenseClientApplication.java
 D:\.code\Java\mq-arc\license-client\src\main\java\com\license\client\listener\MqttMessageListener.java

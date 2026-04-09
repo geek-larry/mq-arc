@@ -2,11 +2,11 @@ package com.license.client.listener;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.license.client.handler.MessageHandler;
+import com.license.common.enums.MessageType;
 import com.license.common.message.LicenseMessage;
 import com.license.common.mqtt.MqttClientService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -24,39 +24,36 @@ public class MqttMessageListener {
     private MqttClientService mqttClientService;
 
     @Autowired
-    private List<MessageHandler<?, ?>> handlers;
+    private List<MessageHandler<?>> handlers;
 
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Value("${license.client.hostname:unknown}")
-    private String hostname;
+    @Autowired
+    private String clientHostname;
 
     @PostConstruct
     public void init() {
-        // 设置消息监听器
         mqttClientService.setMessageListener(this::onMessage);
-        log.info("MQTT message listener initialized for client: {}", hostname);
+        log.info("MQTT message listener initialized for client: {}", clientHostname);
     }
 
     /**
      * 处理接收到的消息
      */
-    private void onMessage(String sourceClientId, String operation, LicenseMessage<?> message) {
-        log.info("Received message from server: {}, operation: {}, messageId: {}",
-            sourceClientId, operation, message.getMessageId());
+    private void onMessage(LicenseMessage<?> message) {
+        log.info("Received message from server, messageType: {}, messageId: {}",
+            message.getMessageType(), message.getMessageId());
 
         try {
-            // 查找对应的handler
-            MessageHandler<?, ?> handler = findHandler(message);
+            MessageHandler<?> handler = findHandler(message);
             if (handler == null) {
-                log.warn("No handler found for operation: {}, softwareType: {}",
-                    message.getOperationType(), message.getSoftwareType());
+                log.warn("No handler found for messageType: {}, operationType: {}",
+                    message.getMessageType(), message.getOperationType());
                 return;
             }
 
-            // 处理消息
-            processMessage(handler, message, sourceClientId, operation);
+            processMessage(handler, message);
 
         } catch (Exception e) {
             log.error("Failed to process message, messageId: {}", message.getMessageId(), e);
@@ -65,14 +62,32 @@ public class MqttMessageListener {
 
     /**
      * 查找对应的handler
+     * 基于messageType找到对应的handler
      */
     @SuppressWarnings("unchecked")
-    private MessageHandler<Object, Object> findHandler(LicenseMessage<?> message) {
-        for (MessageHandler<?, ?> handler : handlers) {
-            if (handler.supports(message)) {
-                return (MessageHandler<Object, Object>) handler;
+    private MessageHandler<Object> findHandler(LicenseMessage<?> message) {
+        String messageType = message.getMessageType();
+        
+        if (messageType == null) {
+            log.warn("Message type is null, cannot find handler");
+            return null;
+        }
+
+        MessageType msgType = MessageType.fromCode(messageType);
+        if (msgType == null) {
+            log.warn("Unknown message type: {}", messageType);
+            return null;
+        }
+
+        String handlerClassName = msgType.getHandlerClassName();
+        
+        for (MessageHandler<?> handler : handlers) {
+            if (handler.getClass().getName().equals(handlerClassName)) {
+                return (MessageHandler<Object>) handler;
             }
         }
+        
+        log.warn("Handler not found for class: {}", handlerClassName);
         return null;
     }
 
@@ -80,10 +95,9 @@ public class MqttMessageListener {
      * 处理消息
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private void processMessage(MessageHandler handler, LicenseMessage message, 
-                                String sourceClientId, String operation) {
+    private void processMessage(MessageHandler handler, LicenseMessage message) {
         try {
-            handler.handle(message, mqttClientService, sourceClientId, operation);
+            handler.handle(message, mqttClientService);
         } catch (Exception e) {
             log.error("Handler execution failed for message: {}", message.getMessageId(), e);
             throw new RuntimeException("Handler execution failed", e);

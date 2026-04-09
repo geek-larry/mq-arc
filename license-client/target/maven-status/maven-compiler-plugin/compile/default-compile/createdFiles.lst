@@ -1,8 +1,7 @@
 com\license\client\config\MqttConfig.class
 com\license\client\handler\AbstractMessageHandler.class
 com\license\client\listener\MqttMessageListener.class
-com\license\client\handler\impl\UserKickoutHandler$1.class
 com\license\client\config\ClientConfig.class
-com\license\client\handler\impl\UserKickoutHandler.class
 com\license\client\handler\MessageHandler.class
 com\license\client\LicenseClientApplication.class
+com\license\client\handler\impl\UserOperationHandler.class

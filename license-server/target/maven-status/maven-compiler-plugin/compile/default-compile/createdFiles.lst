@@ -2,6 +2,5 @@ com\license\server\service\LicenseMgmtService.class
 com\license\server\service\MqttPublisherService.class
 com\license\server\util\PayloadFactory.class
 com\license\server\LicenseServerApplication.class
-com\license\server\util\PayloadFactory$1.class
 com\license\server\config\MqttConfig.class
 com\license\server\controller\LicenseMgmtController.class

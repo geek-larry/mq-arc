@@ -1,6 +1,5 @@
 package com.license.server.util;
 
-import com.license.common.enums.SoftwareType;
 import com.license.common.payload.BasePayload;
 import com.license.common.payload.kickout.*;
 
@@ -29,13 +28,13 @@ public class PayloadFactory {
      * @return 对应的Payload对象
      * @throws IllegalArgumentException 如果软件类型不支持或参数类型不匹配
      */
-    public static BasePayload createKickoutPayload(SoftwareType softwareType, Object params) {
-        switch (softwareType) {
-            case FLEXNET:
+    public static BasePayload createKickoutPayload(String softwareType, Object params) {
+        switch (softwareType.toLowerCase()) {
+            case "flexnet":
                 return convertToFlexnetKickoutPayload(params);
-            case SENTINEL:
+            case "sentinel":
                 return convertToSentinelKickoutPayload(params);
-            case LMX:
+            case "lmx":
                 return convertToLmxKickoutPayload(params);
             default:
                 throw new IllegalArgumentException("Unsupported software type: " + softwareType);
