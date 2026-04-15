@@ -3,11 +3,14 @@ com\license\common\payload\kickout\LmxUserKickoutPayload$LmxUserKickoutPayloadBu
 com\license\common\payload\renew\SentinelUserRenewPayload.class
 com\license\common\mqtt\MqttClientService.class
 com\license\common\payload\kickout\SentinelUserKickoutPayload$SentinelUserKickoutPayloadBuilder.class
+com\license\common\mqtt\MqttClientService$MqttResponseListener.class
+com\license\common\message\LicenseResponse$LicenseResponseBuilder.class
 com\license\common\payload\renew\LmxUserRenewPayload$LmxUserRenewPayloadBuilder.class
 com\license\common\message\LicenseMessage.class
 com\license\common\message\LicenseMessage$LicenseMessageBuilder.class
 com\license\common\payload\renew\LmxUserRenewPayload.class
 com\license\common\payload\renew\SentinelUserRenewPayload$SentinelUserRenewPayloadBuilder.class
+com\license\common\message\LicenseResponse.class
 com\license\common\payload\BasePayload.class
 com\license\common\payload\renew\FlexnetUserRenewPayload.class
 com\license\common\exception\MessageProcessException.class

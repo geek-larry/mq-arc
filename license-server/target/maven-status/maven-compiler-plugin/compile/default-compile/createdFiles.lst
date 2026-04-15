@@ -4,3 +4,5 @@ com\license\server\util\PayloadFactory.class
 com\license\server\LicenseServerApplication.class
 com\license\server\config\MqttConfig.class
 com\license\server\controller\LicenseMgmtController.class
+com\license\server\listener\MqttResponseListener.class
+com\license\server\rrpc\ResponseWaitManager.class

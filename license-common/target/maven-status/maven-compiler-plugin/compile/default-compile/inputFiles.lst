@@ -2,6 +2,7 @@ D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\config\Mqtt
 D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\enums\MessageType.java
 D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\exception\MessageProcessException.java
 D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\message\LicenseMessage.java
+D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\message\LicenseResponse.java
 D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\mqtt\MqttClientService.java
 D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\payload\BasePayload.java
 D:\.code\Java\mq-arc\license-common\src\main\java\com\license\common\payload\kickout\FlexnetUserKickoutPayload.java

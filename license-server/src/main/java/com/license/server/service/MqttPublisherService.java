@@ -23,16 +23,17 @@ public class MqttPublisherService {
     private ObjectMapper objectMapper;
 
     /**
-     * 发送消息到指定客户端
+     * 发送消息到指定客户端（异步，返回messageId）
      *
      * @param targetClientId 目标客户端ID（hostname）
      * @param operationType 操作类型
      * @param softwareType 软件类型
      * @param messageType 消息类型
      * @param payload 消息体
+     * @return messageId 消息ID
      */
-    public void send(String targetClientId, String operationType, 
-                     String softwareType, String messageType, Object payload) {
+    public String sendAsync(String targetClientId, String operationType, 
+                            String softwareType, String messageType, Object payload) {
         try {
             String messageId = UUID.randomUUID().toString();
             
@@ -48,6 +49,8 @@ public class MqttPublisherService {
                 targetClientId, operationType, messageId);
             
             mqttClientService.sendToClient(targetClientId, message);
+            
+            return messageId;
         } catch (Exception e) {
             log.error("Failed to send message to client: {}, operationType: {}", targetClientId, operationType, e);
             throw new RuntimeException("Failed to send message", e);

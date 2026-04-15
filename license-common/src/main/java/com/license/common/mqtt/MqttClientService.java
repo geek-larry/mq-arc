@@ -3,6 +3,7 @@ package com.license.common.mqtt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.license.common.config.MqttProperties;
 import com.license.common.message.LicenseMessage;
+import com.license.common.message.LicenseResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.*;
 
@@ -19,6 +20,7 @@ public class MqttClientService implements MqttCallback {
     private final String clientId;
     
     private MqttMessageListener messageListener;
+    private MqttResponseListener responseListener;
     private volatile boolean isConnected = false;
 
     public MqttClientService(MqttProperties properties, ObjectMapper objectMapper, String hostname) throws MqttException {
@@ -146,18 +148,91 @@ public class MqttClientService implements MqttCallback {
         try {
             String body = new String(message.getPayload());
             
-            log.info("Received request message, topic: {}, size: {} bytes", topic, body.length());
+            log.info("Received message, topic: {}, size: {} bytes", topic, body.length());
             
-            LicenseMessage<?> licenseMessage = objectMapper.readValue(body, LicenseMessage.class);
-            
-            if (messageListener != null) {
-                messageListener.onMessage(licenseMessage);
+            if (topic.endsWith("/response")) {
+                handleResponse(body);
             } else {
-                log.warn("No message listener registered, message ignored, topic: {}", topic);
+                handleRequest(body);
             }
         } catch (Exception e) {
             log.error("Failed to process arrived message, topic: {}, clientId: {}", topic, clientId, e);
         }
+    }
+
+    /**
+     * 处理请求消息
+     */
+    private void handleRequest(String body) throws Exception {
+        LicenseMessage<?> licenseMessage = objectMapper.readValue(body, LicenseMessage.class);
+        
+        if (messageListener != null) {
+            messageListener.onMessage(licenseMessage);
+        } else {
+            log.warn("No message listener registered, message ignored");
+        }
+    }
+
+    /**
+     * 处理响应消息
+     */
+    private void handleResponse(String body) throws Exception {
+        LicenseResponse response = objectMapper.readValue(body, LicenseResponse.class);
+        
+        if (responseListener != null) {
+            responseListener.onResponse(response);
+        } else {
+            log.warn("No response listener registered, response ignored, requestId: {}", response.getRequestId());
+        }
+    }
+
+    /**
+     * 发送响应消息
+     * 
+     * @param targetClientId 目标客户端ID
+     * @param response 响应消息
+     */
+    public void sendResponse(String targetClientId, LicenseResponse response) {
+        if (!isConnected || !client.isConnected()) {
+            throw new IllegalStateException("MQTT client is not connected");
+        }
+        
+        String topic = buildResponseTopic(targetClientId);
+        
+        try {
+            String json = objectMapper.writeValueAsString(response);
+            MqttMessage mqttMessage = new MqttMessage(json.getBytes());
+            mqttMessage.setQos(properties.getQos());
+            
+            log.info("Sending response to client: {}, requestId: {}, status: {}",
+                targetClientId, response.getRequestId(), response.getStatus());
+            
+            client.publish(topic, mqttMessage).waitForCompletion();
+        } catch (Exception e) {
+            log.error("Failed to send response, targetClientId: {}", targetClientId, e);
+            throw new RuntimeException("Failed to send response", e);
+        }
+    }
+
+    /**
+     * 构建响应Topic
+     * 格式: monitor/{targetClientId}/response
+     */
+    private String buildResponseTopic(String targetClientId) {
+        return "monitor/" + targetClientId + "/response";
+    }
+
+    /**
+     * 订阅响应Topic
+     */
+    public void subscribeResponse() {
+        String topic = "monitor/" + clientId + "/response";
+        subscribe(topic);
+        log.info("Subscribed to response topic: {}", topic);
+    }
+
+    public void setResponseListener(MqttResponseListener responseListener) {
+        this.responseListener = responseListener;
     }
 
     @Override
@@ -170,5 +245,12 @@ public class MqttClientService implements MqttCallback {
      */
     public interface MqttMessageListener {
         void onMessage(LicenseMessage<?> message);
+    }
+
+    /**
+     * 响应监听器接口
+     */
+    public interface MqttResponseListener {
+        void onResponse(LicenseResponse response);
     }
 }
